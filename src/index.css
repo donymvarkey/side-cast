@@ -3,6 +3,39 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Quicksand-Regular";
+  src: url('./assets/fonts/Quicksand-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: "Quicksand-Bold";
+  src: url('./assets/fonts/Quicksand-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: "Quicksand-Medium";
+  src: url('./assets/fonts/Quicksand-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: "Quicksand-Semibold";
+  src: url('./assets/fonts/Quicksand-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: "Quicksand-Light";
+  src: url('./assets/fonts/Quicksand-Light.ttf') format('truetype');
+}
+
+@theme {
+  --font-quicksand-semibold: "Quicksand-Semibold", sans-serif;
+  --font-quicksand-bold: "Quicksand-Bold", sans-serif;
+  --font-quicksand-medium: "Quicksand-Medium", sans-serif;
+  --font-quicksand-regular: "Quicksand-Regular", sans-serif;
+  --font-quicksand-light: "Quicksand-Light", sans-serif;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

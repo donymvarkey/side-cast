@@ -1,6 +1,8 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { listDevices, mirrorDevice } from "./adb";
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +50,16 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
 }
+
+// Handle IPC communication
+ipcMain.handle("adb:list-devices", async () => {
+  return await listDevices();
+})
+
+// Handle mirroring a device
+ipcMain.handle("adb:mirror-device", async (_event, serial: string, options: string[]) => {
+  return await mirrorDevice(serial, options);
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import {logo1} from "@/assets/images";
 import {versionInfo} from "@/constants/versionInfo.ts";
+import {Link} from "react-router";
 
 export default function About() {
 	return (
@@ -67,13 +68,14 @@ export default function About() {
 				<ul className="space-y-2 text-blue-400 font-quicksand-regular">
 					<li className="flex items-center gap-2">
 						<Github className="w-4 h-4" />
-						<a
-							href="https://github.com/donymvarkey/side-cast"
+						<Link
+
+							to="https://github.com/donymvarkey/side-cast"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
 							GitHub Repository
-						</a>
+						</Link>
 					</li>
 					<li className="flex items-center gap-2">
 						<Shield className="w-4 h-4" />

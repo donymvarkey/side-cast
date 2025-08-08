@@ -1,10 +1,9 @@
 import {
   Code2Icon, InfoIcon,
   LayoutDashboard,
-  LinkIcon, MonitorIcon, PowerIcon,
-  RefreshCcwIcon,
+  MonitorIcon,
   Settings, SlidersHorizontalIcon,
-  SmartphoneIcon, TerminalSquareIcon, VideoIcon
+  TerminalSquareIcon, VideoIcon
 } from "lucide-react"
 
 import {
@@ -18,7 +17,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {cn} from "@/lib/utils.ts";
-import {logo1, logo2} from "@/assets/images";
+import {logo1} from "@/assets/images";
 
 // Menu items.
 const items = [
@@ -26,28 +25,6 @@ const items = [
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard
-  },
-  {
-    title: "Devices",
-    url: "/devices",
-    icon: SmartphoneIcon,
-    children: [
-      {
-        title: "Connected Devices",
-        url: "#",
-        icon: LinkIcon
-      },
-      {
-        title: "Refresh Devices",
-        url: "#",
-        icon: RefreshCcwIcon
-      },
-      {
-        title: "Restart ADB",
-        url: "#",
-        icon: PowerIcon
-      }
-    ]
   },
   {
     title: "Settings",

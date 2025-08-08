@@ -1,7 +1,15 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { listDevices, mirrorDevice } from "./adb";
+import {
+  getAdbServerState,
+  getDeviceDetails,
+  listDevices,
+  mirrorDevice,
+  restartAdbServer,
+  startAdbServer,
+  stopAdbServer
+} from "./adb";
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -31,8 +39,8 @@ let win: BrowserWindow | null;
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
-    width: 1024, // Set your desired width
-    height: 768, // Set your desired height
+    width: 1124, // Set your desired width
+    height: 864, // Set your desired height
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
     },
@@ -60,6 +68,31 @@ ipcMain.handle("adb:list-devices", async () => {
 ipcMain.handle("adb:mirror-device", async (_event, serial: string, options: string[]) => {
   return await mirrorDevice(serial, options);
 });
+
+// Get the details of device.
+ipcMain.handle("adb:get-device-info", async (_event, serial: string) =>{
+  return await getDeviceDetails(serial);
+})
+
+// Start ADB server
+ipcMain.handle("adb:start-server", async () => {
+  return await startAdbServer();
+})
+
+// Kill ADB Server
+ipcMain.handle("adb:stop-server", async () => {
+  return await stopAdbServer();
+})
+
+// Restart ADB Server
+ipcMain.handle("adb:restart-server", async () => {
+  return await restartAdbServer();
+})
+
+// Get ADB server state
+ipcMain.handle("adb:get-server-state", async () => {
+  return await getAdbServerState();
+})
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

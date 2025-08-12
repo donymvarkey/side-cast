@@ -1,12 +1,19 @@
-import React from "react";
-import { Link } from "react-router";
+import ADBSettings from "@/components/adb-settings";
+import AdvancedSettings from "@/components/advanced-settings";
+import ScrcpySettings from "@/components/scrcpy-settings";
 
 const Settings = () => {
   return (
-    <div>
-      <Link className="px-2 -py-2 bg-blue-300 rounded-md" to="/">
-        Go to Home
-      </Link>
+    <div className={"w-full h-full pe-10"}>
+      <div className="mt-10">
+        <ADBSettings />
+      </div>
+      <div className="mt-10">
+        <ScrcpySettings />
+      </div>
+      <div className="mt-10">
+        <AdvancedSettings />
+      </div>
     </div>
   );
 };

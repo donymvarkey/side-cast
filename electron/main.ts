@@ -1,16 +1,18 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
   getAdbServerState,
   getDeviceDetails,
+  isMirroring,
   listDevices,
   mirrorDevice,
   restartAdbServer,
   startAdbServer,
-  stopAdbServer
+  stopAdbServer,
+  stopMirroring,
 } from "./adb";
-
+import { AppSettings, store } from "./store";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -62,37 +64,88 @@ function createWindow() {
 // Handle IPC communication
 ipcMain.handle("adb:list-devices", async () => {
   return await listDevices();
-})
+});
 
 // Handle mirroring a device
-ipcMain.handle("adb:mirror-device", async (_event, serial: string, options: string[]) => {
-  return await mirrorDevice(serial, options);
+ipcMain.handle(
+  "adb:mirror-device",
+  async (_event, serial: string, options: string[]) => {
+    return await mirrorDevice(serial, options);
+  }
+);
+
+// Stop a mirroring device
+ipcMain.handle("adb:stop-mirror", async (_event, serial: string) => {
+  return stopMirroring(serial);
+});
+
+// Active mirroring sessions
+ipcMain.handle("adb:get-active-mirrors", async (_event, serial: string) => {
+  return isMirroring(serial);
 });
 
 // Get the details of device.
-ipcMain.handle("adb:get-device-info", async (_event, serial: string) =>{
+ipcMain.handle("adb:get-device-info", async (_event, serial: string) => {
   return await getDeviceDetails(serial);
-})
+});
 
 // Start ADB server
 ipcMain.handle("adb:start-server", async () => {
   return await startAdbServer();
-})
+});
 
 // Kill ADB Server
 ipcMain.handle("adb:stop-server", async () => {
   return await stopAdbServer();
-})
+});
 
 // Restart ADB Server
 ipcMain.handle("adb:restart-server", async () => {
   return await restartAdbServer();
-})
+});
 
 // Get ADB server state
 ipcMain.handle("adb:get-server-state", async () => {
   return await getAdbServerState();
-})
+});
+
+// Open the dialog for selecting the ADB binary.
+ipcMain.handle("select-adb-path", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [
+      {
+        name: "ADB Executable",
+        extensions: process.platform === "win32" ? ["exe"] : [""],
+      },
+    ],
+  });
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+// Handle the App Settings.
+
+// Get a setting
+ipcMain.handle("settings:get", (_event, key: keyof AppSettings) => {
+  return store.get(key);
+});
+
+// Set a setting
+ipcMain.handle(
+  "settings:set",
+  (_event, key: keyof AppSettings, value: AppSettings[keyof AppSettings]) => {
+    store.set(key, value);
+    return store.get(key);
+  }
+);
+
+// Get all settings
+ipcMain.handle("settings:getAll", () => {
+  return store.store;
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

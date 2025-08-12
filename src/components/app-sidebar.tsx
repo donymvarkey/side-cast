@@ -1,8 +1,7 @@
 import {
-  Code2Icon, InfoIcon,
+  InfoIcon,
   LayoutDashboard,
-  MonitorIcon,
-  Settings, SlidersHorizontalIcon,
+  Settings,
   TerminalSquareIcon, VideoIcon
 } from "lucide-react"
 
@@ -30,23 +29,6 @@ const items = [
     title: "Settings",
     url: "/settings",
     icon: Settings,
-    children: [
-      {
-        title: "General",
-        url: "#",
-        icon: SlidersHorizontalIcon
-      },
-      {
-        title: "Scrcpy",
-        url: "#",
-        icon: MonitorIcon
-      },
-      {
-        title: "Advanced",
-        url: "#",
-        icon: Code2Icon
-      }
-    ]
   },
   {
     title: "Recordings",
@@ -85,25 +67,6 @@ export function AppSidebar({active}: { active?: string }) {
                         <span className={"text-white font-quicksand-semibold"}>{item.title}</span>
                       </a>
                     </SidebarMenuButton>
-
-                    {/* Nested children rendering */}
-                    {item.children && (
-                      <SidebarMenu className="ml-4 mt-1">
-                        {item.children.map((child) => {
-
-                          return (
-                            <SidebarMenuItem key={child.title}>
-                              <SidebarMenuButton className={"hover:bg-gray-800"} asChild>
-                                <a href={child.url}>
-                                  <child.icon className="w-4 h-4 text-white" />
-                                  <span className={"text-gray-200 font-quicksand-medium"}>{child.title}</span>
-                                </a>
-                              </SidebarMenuButton>
-                            </SidebarMenuItem>
-                          );
-                        })}
-                      </SidebarMenu>
-                    )}
                   </SidebarMenuItem>
                 );
               })}

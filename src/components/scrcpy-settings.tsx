@@ -121,7 +121,7 @@ export default function ScrcpySettings() {
           />
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <Label className="font-quicksand-medium text-sm text-gray-400">
             Fullscreen
           </Label>
@@ -129,7 +129,7 @@ export default function ScrcpySettings() {
             checked={fullscreen}
             onCheckedChange={() => handleSetSettings("fullscreen", !fullscreen)}
           />
-        </div>
+        </div> */}
 
         <div className="flex items-center justify-between">
           <Label className="font-quicksand-medium text-sm text-gray-400">

@@ -1,5 +1,6 @@
 import { execa } from "execa";
 import type { ChildProcess } from "node:child_process";
+import { store } from "./store";
 
 export interface DeviceInfo {
   serial: string;
@@ -24,6 +25,8 @@ export interface DeviceDetails {
 }
 
 const activeMirrors: Record<string, ChildProcess> = {};
+const ADB_PATH = store.get("adbPath") === "" ? "adb" : store.get("adbPath");
+const TIME_OUT = store.get("adbTimeout") || 5000;
 
 /**
  * Lists all connected Android devices using ADB.
@@ -31,7 +34,9 @@ const activeMirrors: Record<string, ChildProcess> = {};
  */
 export async function listDevices(): Promise<DeviceInfo[]> {
   try {
-    const { stdout } = await execa("adb", ["devices", "-l"]);
+    const { stdout } = await execa(ADB_PATH, ["devices", "-l"], {
+      timeout: TIME_OUT,
+    });
     const lines = stdout.split("\n").slice(1); // Skip the first line which is a header
 
     const devices: DeviceInfo[] = lines
@@ -84,7 +89,26 @@ export async function mirrorDevice(
     };
   }
   try {
+    // const settings = store.get("")
     const args = ["-s", serial, ...options];
+
+    if (store.get("bitrate")) args.push("-b", store.get("bitrate"));
+    if (store.get("maxRes")) args.push("-m", String(store.get("maxRes")));
+    if (store.get("maxFPS"))
+      args.push("--max-fps", String(store.get("maxFPS")));
+    if (store.get("showTouches")) args.push("-t");
+
+    // 🔊 Audio forwarding
+    if (store.get("audioForwarding")) {
+      args.push("--audio");
+
+      // Optional: If your scrcpy build supports specifying codec or output
+      if (store.get("audioForwarding")) {
+        args.push("--audio-codec", "aac"); // e.g., "opus" or "aac"
+      }
+    } else {
+      args.push("--no-audio");
+    }
 
     const subProcess = execa("scrcpy", args, {
       detached: true,
@@ -101,9 +125,12 @@ export async function mirrorDevice(
     subProcess.unref();
 
     return { success: true };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Failed to start scrcpy:", e);
-    return { success: false, error: e.message };
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : String(e),
+    };
   }
 }
 
@@ -150,7 +177,9 @@ export function isMirroring(serial: string): boolean {
  */
 export async function getDeviceDetails(serial: string): Promise<DeviceDetails> {
   const execAdb = async (cmd: string) => {
-    const { stdout } = await execa("adb", ["-s", serial, "shell", cmd]);
+    const { stdout } = await execa(ADB_PATH, ["-s", serial, "shell", cmd], {
+      timeout: TIME_OUT,
+    });
     return stdout.trim();
   };
 
@@ -225,7 +254,9 @@ export async function getDeviceDetails(serial: string): Promise<DeviceDetails> {
  */
 async function getConnectionState(serial: string): Promise<string> {
   try {
-    const { stdout } = await execa("adb", ["devices"]);
+    const { stdout } = await execa(ADB_PATH, ["devices"], {
+      timeout: TIME_OUT,
+    });
     const line = stdout.split("\n").find((l) => l.startsWith(serial));
     if (!line) return "offline";
     const parts = line.trim().split(/\s+/);
@@ -246,7 +277,9 @@ async function getConnectionState(serial: string): Promise<string> {
  */
 export async function getAdbServerState(): Promise<boolean> {
   try {
-    const { stdout } = await execa("adb", ["devices"]);
+    const { stdout } = await execa(ADB_PATH, ["devices"], {
+      timeout: TIME_OUT,
+    });
 
     // If we see "daemon not running", then it was not running before
     return !stdout.includes("daemon not running");
@@ -267,11 +300,13 @@ export async function getAdbServerState(): Promise<boolean> {
  */
 export async function startAdbServer(): Promise<unknown> {
   try {
-    const { stdout } = await execa("adb", ["start-server"]);
+    const { stdout } = await execa(ADB_PATH, ["start-server"], {
+      timeout: TIME_OUT,
+    });
     return stdout.trim();
   } catch (e: unknown) {
     console.error("Failed to start ADB Server", e);
-    return e.message;
+    return e instanceof Error ? e.message : String(e);
   }
 }
 
@@ -287,11 +322,13 @@ export async function startAdbServer(): Promise<unknown> {
  */
 export async function stopAdbServer(): Promise<unknown | Error> {
   try {
-    const { stdout } = await execa("adb", ["kill-server"]);
+    const { stdout } = await execa(ADB_PATH, ["kill-server"], {
+      timeout: TIME_OUT,
+    });
     return stdout.trim();
-  } catch (e) {
+  } catch (e: unknown) {
     console.error("Failed to stop ADB Server", e);
-    return e.message;
+    return e instanceof Error ? e.message : String(e);
   }
 }
 
@@ -312,5 +349,37 @@ export async function restartAdbServer(): Promise<unknown> {
   } catch (e) {
     console.error("Failed to restart ADB Server", e);
     return e;
+  }
+}
+
+/**
+ * Connects to an Android device via WiFi using ADB.
+ *
+ * This function establishes a wireless connection to an Android device using its IP address and port.
+ * The device must have ADB over WiFi enabled and be on the same network as the host computer.
+ *
+ * @param {string} ip - The IP address of the Android device (e.g., "192.168.1.100").
+ * @param {string} port - The port number for ADB connection (typically "5555").
+ * @returns {Promise<string>} - A promise that resolves to the connection result message from ADB.
+ *
+ * @example
+ * // Connect to a device at IP 192.168.1.100 on port 5555
+ * const result = await connectViaWifi("192.168.1.100", "5555");
+ * console.log(result); // "connected to 192.168.1.100:5555" or error message
+ *
+ * @throws {Error} - Throws an error if the connection fails or ADB is not available.
+ */
+export async function connectViaWifi(
+  ip: string,
+  port: string
+): Promise<string> {
+  try {
+    const { stdout } = await execa(ADB_PATH, ["connect", `${ip}:${port}`], {
+      timeout: TIME_OUT,
+    });
+    return stdout;
+  } catch (error) {
+    console.error("Failed to connect to device via WiFi:", error);
+    return error instanceof Error ? error.message : String(error);
   }
 }

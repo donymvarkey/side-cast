@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import DeviceListItem from "@/components/device-list-item.tsx";
 import DeviceDetailsDialog from "@/components/DeviceDetailsDialog.tsx";
-import { DeviceDetails } from "@/types";
-import { Power, PowerOff, RefreshCw } from "lucide-react";
+import { Device, DeviceDetails } from "@/types";
+import { PlusCircle, Power, PowerOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 import { toast } from "sonner";
+import WifiPairingDialog from "@/components/wifi-pairing-dialog";
 
 const Home = () => {
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState<boolean>(false);
   const [deviceDetails, setDeviceDetails] = useState<DeviceDetails | null>(
     null
   );
-  const [isServerRunning, setIsServerRunning] = useState(false);
+  const [isServerRunning, setIsServerRunning] = useState<boolean>(false);
+  const [showParingDialog, setShowPairingDialog] = useState<boolean>(false);
 
   const getAdbServerState = async () => {
     window.electronAPI
@@ -26,7 +28,6 @@ const Home = () => {
     setLoading(true);
     try {
       window.electronAPI.invoke("adb:list-devices").then((devices) => {
-        console.log("🚀 ~ listConnectedDevices ~ devices:", devices);
         setDevices(devices);
       });
     } catch (e) {
@@ -87,12 +88,10 @@ const Home = () => {
     getAdbServerState();
   }, [devices]);
   return (
-    <div className={"w-full h-full"}>
+    <div className={"w-full h-full pe-4"}>
       <div className={"flex flex-col w-full"}>
         <div
-          className={
-            "flex items-center justify-end self-end gap-x-2 w-full mr-10"
-          }
+          className={"flex items-center justify-end self-end gap-x-2 w-full "}
         >
           <div className={"flex items-center gap-x-2"}>
             <div
@@ -130,6 +129,15 @@ const Home = () => {
             </Button>
           )}
         </div>
+        <div className="flex items-center justify-end my-4">
+          <Button
+            onClick={() => setShowPairingDialog(true)}
+            className="bg-blue-500 hover:bg-blue-600"
+          >
+            <PlusCircle className="size-4" />
+            <span className="font-quicksand-medium">Pair Device over WiFi</span>
+          </Button>
+        </div>
         <h1 className={"text-gray-400 font-quicksand-semibold mb-4 mt-2"}>
           Connected Devices
         </h1>
@@ -142,7 +150,7 @@ const Home = () => {
             No devices connected.
           </p>
         ) : (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 pe-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {devices.map((device, index) => (
               <DeviceListItem
                 key={index}
@@ -161,6 +169,12 @@ const Home = () => {
           device={deviceDetails}
           open={showDetailsDialog}
           onOpenChange={() => setShowDetailsDialog((prev: boolean) => !prev)}
+        />
+      )}
+      {showParingDialog && (
+        <WifiPairingDialog
+          open={showParingDialog}
+          onOpenChange={() => setShowPairingDialog((prev: boolean) => !prev)}
         />
       )}
     </div>

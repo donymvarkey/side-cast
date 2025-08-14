@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
+  connectViaWifi,
   getAdbServerState,
   getDeviceDetails,
   isMirroring,
@@ -124,6 +125,11 @@ ipcMain.handle("select-adb-path", async () => {
     return result.filePaths[0];
   }
   return null;
+});
+
+// Connect via WiFi
+ipcMain.handle("adb:connect-wifi", async (_event, ip: string, port: string) => {
+  return await connectViaWifi(ip, port);
 });
 
 // Handle the App Settings.

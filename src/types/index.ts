@@ -34,3 +34,12 @@ export interface AppSettings {
   debugLogging: boolean;
   scriptsPath?: string;
 }
+
+export interface Device {
+  serial: string;
+  device: string;
+  model: string;
+  connectionMode: string;
+  product: string;
+  status: string;
+}

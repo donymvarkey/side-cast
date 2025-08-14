@@ -1,8 +1,12 @@
-import React from 'react'
-
 const Logs = () => {
-	return (
-		<div className={"text-white"}>Logs</div>
-	)
-}
-export default Logs
+  return (
+    <div
+      className={
+        "text-white flex w-full min-h-[90vh] items-center justify-center text-4xl font-quicksand-bold"
+      }
+    >
+      Coming Soon
+    </div>
+  );
+};
+export default Logs;

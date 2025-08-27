@@ -1,5 +1,8 @@
 // src/main/store.ts
 import Store from "electron-store";
+import path from "path";
+import os from "node:os";
+import { existsSync, mkdirSync } from "node:fs";
 
 export interface AppSettings {
   // ADB Settings
@@ -23,6 +26,25 @@ export interface AppSettings {
   debugLogging: boolean;
   scriptsPath?: string;
   defaultConnectionMode: string;
+
+  // Recording settings
+  recordingPath: string;
+  screenShotPath: string;
+}
+
+const getUserHomeDirectory = () => {
+  return os.homedir();
+};
+
+const sideCastDir = path.join(getUserHomeDirectory(), "SideCast");
+const recordingsDir = path.join(sideCastDir, "Recordings");
+const screenshotsDir = path.join(sideCastDir, "Screenshots");
+
+// Ensure the SideCast, Recordings, and Screenshots directories exist
+for (const dir of [sideCastDir, recordingsDir, screenshotsDir]) {
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
 }
 
 export const store = new Store<AppSettings>({
@@ -49,5 +71,9 @@ export const store = new Store<AppSettings>({
     debugLogging: false,
     scriptsPath: "",
     defaultConnectionMode: "usb",
+
+    // Recording settings
+    recordingPath: recordingsDir,
+    screenShotPath: screenshotsDir,
   },
 });

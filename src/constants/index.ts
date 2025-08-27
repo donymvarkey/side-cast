@@ -1,8 +1,8 @@
 export const paths = {
-	"/": "Home",
-	"/settings": "Settings",
-	"/devices": "Devices",
-	"/recordings": "Recordings",
-	"/logs": "Logs",
-	"/about": "About"
-}
+  "/": "Home",
+  "/settings": "Settings",
+  "/devices": "Devices",
+  "/recordings": "Media",
+  "/logs": "Logs",
+  "/about": "About",
+};

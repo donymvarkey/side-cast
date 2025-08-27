@@ -17,6 +17,9 @@ const Home = () => {
   );
   const [isServerRunning, setIsServerRunning] = useState<boolean>(false);
   const [showParingDialog, setShowPairingDialog] = useState<boolean>(false);
+  const [activeSessions, setActiveSessions] = useState<
+    Record<string, { pid: number; serial: string }>
+  >({});
 
   const getAdbServerState = async () => {
     window.electronAPI
@@ -44,11 +47,11 @@ const Home = () => {
       []
     );
     if (!res.success) {
-      toast("Failed to mirror device: " + res.error);
+      toast.error("Failed to mirror device: " + res.error);
       return;
     }
-
-    toast("Mirroring device " + serial + " started successfully");
+    listActiveSessions();
+    toast.success("Mirroring device " + serial + " started successfully");
   };
 
   const fetchDeviceInfo = async (serial: string) => {
@@ -74,6 +77,28 @@ const Home = () => {
       setIsServerRunning((prev: boolean) => !prev);
     });
   };
+
+  const listActiveSessions = async () => {
+    const sessions = await window.electronAPI.invoke("adb:list-sessions");
+    setActiveSessions(sessions);
+  };
+
+  const handleStopMirroring = async (serial: string) => {
+    await window.electronAPI.invoke("adb:stop-mirror", serial);
+    await listActiveSessions();
+    toast.success("Mirroring device " + serial + " stopped successfully");
+  };
+
+  useEffect(() => {
+    const handleStopped = async (s: string) => {
+      if (s === activeSessions[s]?.serial) {
+        await handleStopMirroring(s);
+      }
+    };
+    window.mirrorApi.onMirroringStopped(handleStopped);
+
+    return () => {};
+  }, []);
 
   useEffect(() => {
     listConnectedDevices();
@@ -159,6 +184,8 @@ const Home = () => {
                 {...device}
                 mirrorDevice={(serial: string) => handleMirror(serial)}
                 getInfo={(serial: string) => fetchDeviceInfo(serial)}
+                activeSessions={activeSessions}
+                stopMirror={(serial: string) => handleStopMirroring(serial)}
               />
             ))}
           </div>

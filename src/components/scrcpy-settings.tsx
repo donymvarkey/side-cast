@@ -5,15 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSettings } from "@/types";
+// import { Button } from "./ui/button";
 
 export default function ScrcpySettings() {
   const [bitrate, setBitrate] = useState<string>();
   const [maxResolution, setMaxResolution] = useState<number>();
   const [maxFps, setMaxFps] = useState<number>();
   const [showTouches, setShowTouches] = useState<boolean>(false);
-  const [fullscreen, setFullscreen] = useState<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_fullscreen, setFullscreen] = useState<boolean>(false);
   const [audioForwarding, setAudioForwarding] = useState<boolean>(false);
   const [customArgs, setCustomArgs] = useState<string>("");
+  // const [defaultPath, setDefaultPath] = useState<string>("");
 
   // Handle set bitrate
   const handleSetSettings = (setting: string, value: unknown) => {
@@ -129,6 +132,28 @@ export default function ScrcpySettings() {
             checked={fullscreen}
             onCheckedChange={() => handleSetSettings("fullscreen", !fullscreen)}
           />
+        </div> */}
+
+        {/* Default Path for recordings and screenshots */}
+        {/* <div>
+          <Label className="font-quicksand-medium text-sm text-gray-400">
+            Path to Recordings
+          </Label>
+          <div className="flex gap-2 mt-1">
+            <Input
+              value={defaultPath}
+              onChange={(e) => setDefaultPath(e.target.value)}
+              placeholder="Path to save recordings/screenshots"
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+            <Button
+              type="button"
+              className="bg-blue-500 hover:bg-blue-600"
+              onClick={() => {}}
+            >
+              Browse
+            </Button>
+          </div>
         </div> */}
 
         <div className="flex items-center justify-between">

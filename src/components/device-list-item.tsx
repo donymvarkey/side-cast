@@ -1,22 +1,30 @@
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Info, Monitor, SmartphoneIcon, Usb, Wifi } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Image, Info, Monitor, SmartphoneIcon, Usb, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import { cn } from "@/lib/utils.ts";
-// import {Badge} from "@/components/ui/badge.tsx";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const DeviceListItem = ({
   serial,
   model,
   product,
   device,
-  status,
   connectionMode,
+  activeSessions,
   mirrorDevice,
+  stopMirror,
   getInfo,
   onOpenChange,
 }: {
@@ -25,14 +33,87 @@ const DeviceListItem = ({
   product: string;
   device: string;
   connectionMode: "usb" | "tcpip";
-  status: string;
+  activeSessions: Record<string, { pid: number; serial: string }>;
   mirrorDevice: (serial: string) => void;
+  stopMirror: (serial: string) => void;
   getInfo: (serial: string) => void;
   onOpenChange: () => void;
 }) => {
+  const [recordingStatus, setRecordingStatus] = useState<
+    Record<string, boolean>
+  >({});
   const handleDeviceInfo = (serial: string) => {
     getInfo(serial);
     onOpenChange();
+  };
+
+  /**
+   *
+   * @param serial Device serial number
+   * Start screen recording for the device with the given serial number.
+   */
+  const handleStartRecording = async (serial: string) => {
+    try {
+      const result = await window.screenApi.startRecording(serial);
+      if (result.success) {
+        setRecordingStatus({
+          ...recordingStatus,
+          [serial]: true,
+        });
+        console.log("Recording started:", result.message);
+        toast.success(result.message);
+      } else {
+        console.error("Failed to start recording:", result.error);
+        toast.error(`Failed to start recording: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast.error(`Failed to start recording: ${error}`);
+    }
+  };
+
+  /**
+   *
+   * @param serial Device serial number
+   * Stop screen recording for the device with the given serial number.
+   */
+  const handleStopRecording = async (serial: string) => {
+    try {
+      const result = await window.screenApi.stopRecording(serial);
+      if (result.success) {
+        setRecordingStatus({
+          ...recordingStatus,
+          [serial]: false,
+        });
+        toast.success("Recording stopped. File saved.");
+      } else {
+        console.error("Failed to stop recording:", result.error);
+        toast.error(`Failed to stop recording: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error stopping recording:", error);
+    }
+  };
+
+  /**
+   *
+   * @param serial Device serial number
+   * Take a screenshot for the device with the given serial number.
+   */
+  const handleTakeScreenshot = async (serial: string) => {
+    try {
+      const result = await window.screenApi.takeScreenshot(serial);
+      if (result.success) {
+        console.log("Screenshot saved:", result.path);
+        toast.success("Screenshot saved: " + result.path);
+        // You could add a toast notification here
+      } else {
+        console.error("Failed to take screenshot:", result.error);
+        toast.error(`Failed to take screenshot: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error taking screenshot:", error);
+    }
   };
   return (
     <Card
@@ -54,6 +135,9 @@ const DeviceListItem = ({
           ) : (
             <Wifi className="size-4 text-blue-500" />
           )}
+          {/* {activeSessions[serial]?.serial === serial && (
+            <Cast className="text-green-500 size-4" />
+          )} */}
         </CardTitle>
         {/*<Badge variant="outline" className="text-xs uppercase bg-green-500 border-0 text-gray-100">*/}
         {/*	{status}*/}
@@ -70,12 +154,24 @@ const DeviceListItem = ({
           <span className="text-gray-400">Device:</span> {device || "—"}
         </p>
         <div className="flex gap-2 pt-2 items-center justify-between">
-          <Button
-            className={"bg-blue-500 hover:bg-blue-600 flex-1"}
-            onClick={() => mirrorDevice(serial)}
-          >
-            <Monitor className="w-4 h-4 mr-1" /> Mirror
-          </Button>
+          {activeSessions[serial]?.serial === serial ? (
+            <>
+              <Button
+                onClick={() => stopMirror(serial)}
+                className="flex-1"
+                variant={"destructive"}
+              >
+                Stop Mirror
+              </Button>
+            </>
+          ) : (
+            <Button
+              className={"bg-green-500 hover:bg-green-600 flex-1"}
+              onClick={() => mirrorDevice(serial)}
+            >
+              <Monitor className="w-4 h-4 mr-1" /> Mirror
+            </Button>
+          )}
           <Button
             onClick={() => handleDeviceInfo(serial)}
             variant="secondary"
@@ -85,6 +181,53 @@ const DeviceListItem = ({
           </Button>
         </div>
       </CardContent>
+      <CardFooter>
+        {activeSessions[serial]?.serial === serial && (
+          <div>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  variant={"ghost"}
+                  className="hover:bg-gray-800"
+                  onClick={() =>
+                    recordingStatus[serial]
+                      ? handleStopRecording(serial)
+                      : handleStartRecording(serial)
+                  }
+                >
+                  <div
+                    className={cn(
+                      "bg-red-500 size-4 rounded-full",
+                      recordingStatus[serial] && "animate-pulse"
+                    )}
+                  />
+                </Button>
+                <TooltipContent>
+                  {recordingStatus[serial] ? (
+                    <span>Stop Recording</span>
+                  ) : (
+                    <span>Start Recording</span>
+                  )}
+                </TooltipContent>
+              </TooltipTrigger>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  variant={"ghost"}
+                  className="hover:bg-gray-800"
+                  onClick={() => handleTakeScreenshot(serial)}
+                >
+                  <Image className="text-gray-100 size-4" />
+                </Button>
+                <TooltipContent>
+                  <span>Take a screenshot</span>
+                </TooltipContent>
+              </TooltipTrigger>
+            </Tooltip>
+          </div>
+        )}
+      </CardFooter>
     </Card>
   );
 };

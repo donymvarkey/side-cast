@@ -1,6 +1,7 @@
 import { execa } from "execa";
 import type { ChildProcess } from "node:child_process";
 import { store } from "./store";
+import { BrowserWindow } from "electron";
 
 export interface DeviceInfo {
   serial: string;
@@ -120,6 +121,10 @@ export async function mirrorDevice(
     subProcess.on("exit", (code) => {
       console.log(`scrcpy for device ${serial} exited with code ${code}`);
       delete activeMirrors[serial];
+      // 🔔 Notify renderer that mirroring stopped
+      BrowserWindow.getAllWindows().forEach((win) => {
+        win.webContents.send("mirroring-stopped", { serial, code });
+      });
     });
 
     subProcess.unref();
@@ -155,6 +160,29 @@ export function stopMirroring(serial: string) {
  */
 export function isMirroring(serial: string): boolean {
   return Boolean(activeMirrors[serial]);
+}
+
+/**
+ * Returns the list of current active mirroring sessions.
+ * @returns {Record<string, {pid: number, serial: string}>}
+ */
+export function getActiveMirrors(): Record<
+  string,
+  { pid: number; serial: string }
+> {
+  const serializableMirrors: Record<string, { pid: number; serial: string }> =
+    {};
+
+  for (const [serial, process] of Object.entries(activeMirrors)) {
+    if (process.pid) {
+      serializableMirrors[serial] = {
+        pid: process.pid,
+        serial: serial,
+      };
+    }
+  }
+
+  return serializableMirrors;
 }
 
 /**

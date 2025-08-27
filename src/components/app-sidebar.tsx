@@ -32,7 +32,7 @@ const items = [
     icon: Settings,
   },
   {
-    title: "Recordings",
+    title: "Media",
     url: "/recordings",
     icon: VideoIcon,
   },
@@ -50,7 +50,7 @@ const items = [
 
 export function AppSidebar({ active }: { active?: string }) {
   return (
-    <Sidebar className={"border-0"}>
+    <Sidebar variant="sidebar" collapsible="icon" className={"border-0"}>
       <SidebarContent className={"bg-gray-900"}>
         <SidebarGroup>
           <SidebarGroupLabel

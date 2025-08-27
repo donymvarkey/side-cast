@@ -13,7 +13,7 @@ export default function ADBSettings() {
 
   // Trigger Electron dialog to select adb binary
   const handleBrowseADB = async () => {
-    const path = await window.electronAPI.invoke("select-adb-path");
+    const path = await window.electronAPI.invoke("adb:select-adb-path");
     if (path) {
       window.settings.set("adbPath", path);
       setAdbPath(path);

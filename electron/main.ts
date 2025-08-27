@@ -1,8 +1,9 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, protocol } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
   connectViaWifi,
+  getActiveMirrors,
   getAdbServerState,
   getDeviceDetails,
   isMirroring,
@@ -14,6 +15,16 @@ import {
   stopMirroring,
 } from "./adb";
 import { AppSettings, store } from "./store";
+import { logCatProcess, stopAllLogcats, stopLogcat } from "./logCat";
+import {
+  deleteFile,
+  listMediaFiles,
+  listRecordings,
+  listScreenShots,
+  startScreenRecord,
+  stopScreenRecord,
+  takeScreenShot,
+} from "./screenUtils";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -111,7 +122,7 @@ ipcMain.handle("adb:get-server-state", async () => {
 });
 
 // Open the dialog for selecting the ADB binary.
-ipcMain.handle("select-adb-path", async () => {
+ipcMain.handle("adb:select-adb-path", async () => {
   const result = await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: [
@@ -127,9 +138,113 @@ ipcMain.handle("select-adb-path", async () => {
   return null;
 });
 
+// List all the active mirroring sessions
+ipcMain.handle("adb:list-sessions", () => {
+  return getActiveMirrors();
+});
+
 // Connect via WiFi
 ipcMain.handle("adb:connect-wifi", async (_event, ip: string, port: string) => {
   return await connectViaWifi(ip, port);
+});
+
+// Handle the adb logcat (batched)
+ipcMain.handle("adb:start-logcat", (event, serial: string) => {
+  let buffer: string[] = [];
+  const FLUSH_INTERVAL_MS = 100; // adjust as needed
+  let flushTimer: NodeJS.Timeout | null = null;
+
+  logCatProcess(
+    serial,
+    (lines: string[]) => {
+      buffer.push(...lines);
+      if (!flushTimer) {
+        flushTimer = setInterval(() => {
+          if (buffer.length > 0) {
+            event.sender.send("adb:logcat-data", { serial, lines: buffer });
+            buffer = [];
+          }
+        }, FLUSH_INTERVAL_MS);
+      }
+    },
+    (manual: boolean) => {
+      if (flushTimer) {
+        clearInterval(flushTimer);
+        flushTimer = null;
+      }
+      event.sender.send("adb:logcat-end", { serial, manual });
+    }
+  );
+});
+
+// Stop logcat for device
+ipcMain.handle("adb:stop-logcat", (_event, serial: string) => {
+  stopLogcat(serial);
+});
+
+// Start screen recording
+ipcMain.handle("screen:start-recording", async (_event, serial: string) => {
+  return await startScreenRecord(serial);
+});
+
+// Stop screen recording
+ipcMain.handle("screen:stop-recording", async (_event, serial: string) => {
+  return await stopScreenRecord(serial);
+});
+
+// Take screenshot
+ipcMain.handle("screen:take-screenshot", async (_event, serial: string) => {
+  return await takeScreenShot(serial);
+});
+
+// Select recording save directory
+ipcMain.handle("screen:select-recording-path", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+    title: "Select Recording Save Directory",
+  });
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+// Select screenshot save directory
+ipcMain.handle("screen:select-screenshot-path", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+    title: "Select Screenshot Save Directory",
+  });
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+// List the Media files of the App.
+ipcMain.handle("screen:list-media-files", async () => {
+  return await listMediaFiles();
+});
+
+// List the recordings
+ipcMain.handle(
+  "screen:list-recordings",
+  async (_event, page = 1, limit = 20) => {
+    return await listRecordings(page, limit);
+  }
+);
+
+// List the screenshots
+ipcMain.handle(
+  "screen:list-screenshots",
+  async (_event, page = 1, limit = 20) => {
+    return await listScreenShots(page, limit);
+  }
+);
+
+// Delete a media file (recording or screenshot)
+ipcMain.handle("screen:delete-media-file", async (_event, filePath: string) => {
+  return await deleteFile(filePath);
 });
 
 // Handle the App Settings.
@@ -163,6 +278,10 @@ app.on("window-all-closed", () => {
   }
 });
 
+app.on("before-quit", () => {
+  stopAllLogcats();
+});
+
 app.on("activate", () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
@@ -171,4 +290,11 @@ app.on("activate", () => {
   }
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  protocol.registerFileProtocol("sidecast", (req, cb) => {
+    const url = req.url.replace("sidecast://", "");
+    const filePath = path.normalize(url);
+    cb({ path: filePath });
+  });
+});

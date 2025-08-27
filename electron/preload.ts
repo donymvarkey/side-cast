@@ -39,3 +39,40 @@ contextBridge.exposeInMainWorld("settings", {
 
   getAll: (): Promise<AppSettings> => ipcRenderer.invoke("settings:getAll"),
 });
+
+contextBridge.exposeInMainWorld("logCatApi", {
+  startLogcat: (serial: string) =>
+    ipcRenderer.invoke("adb:start-logcat", serial),
+  stopLogcat: (serial: string) => ipcRenderer.invoke("adb:stop-logcat", serial),
+  onLogcatData: (callback: (serial: string, lines: string[]) => void) =>
+    ipcRenderer.on("adb:logcat-data", (_event, { serial, lines }) => {
+      callback(serial, lines);
+    }),
+  onLogcatEnd: (callback: (serial: string) => void) =>
+    ipcRenderer.on("adb:logcat-end", (_event, { serial }) => {
+      callback(serial);
+    }),
+});
+
+contextBridge.exposeInMainWorld("mirrorApi", {
+  onMirroringStopped: (callback: (serial: string) => void) => {
+    ipcRenderer.on("mirroring-stopped", (_event, { serial }) =>
+      callback(serial)
+    );
+  },
+  offMirroringStopped: (callback: (serial: string) => void) => {
+    ipcRenderer.removeListener("mirroring-stopped", callback);
+  },
+});
+
+contextBridge.exposeInMainWorld("screenApi", {
+  startRecording: (serial: string) =>
+    ipcRenderer.invoke("screen:start-recording", serial),
+  stopRecording: (serial: string) =>
+    ipcRenderer.invoke("screen:stop-recording", serial),
+  takeScreenshot: (serial: string) =>
+    ipcRenderer.invoke("screen:take-screenshot", serial),
+  selectRecordingPath: () => ipcRenderer.invoke("screen:select-recording-path"),
+  selectScreenshotPath: () =>
+    ipcRenderer.invoke("screen:select-screenshot-path"),
+});

@@ -1,5 +1,3 @@
-# SideCast
-
 <div align="center">
   <img src="src/assets/images/logo_side_cast_white.png" alt="SideCast Logo" width="200"/>
   <br/>
@@ -11,10 +9,14 @@
 
 **SideCast** is a lightweight, cross-platform desktop application built with Electron that allows you to mirror and interact with your Android devices using ADB and scrcpy. It's fast, simple, and completely local — no internet required.
 
-<img src="screenshots/HomeScreen.png" alt="Home Screen" width="500" />
-<img src="screenshots/SettingsScreen.png" alt="Settings Screen" width="500" />
-<img src="screenshots/DeviceDetails.png" alt="Device Details" width="500" />
-<img src="screenshots/PairViaWifi.png" alt="Pair Via Wifi" width="500" />
+## 🖼️ Showcase
+
+<div>
+   <img src="screenshots/HomeScreen.png" alt="Home Screen" width="500" />
+   <img src="screenshots/SettingsScreen.png" alt="Settings Screen" width="500" />
+   <img src="screenshots/DeviceDetails.png" alt="Device Details" width="500" />
+   <img src="screenshots/PairViaWifi.png" alt="Pair Via Wifi" width="500" />
+</div>
 
 ## ✨ Features
 
@@ -22,8 +24,8 @@
 - **Multi-Device Support** - Connect and manage multiple Android devices simultaneously
 - **USB & Wi-Fi Connection** - Support for both USB and wireless ADB connections. (WiFi Connection is a Work in Progress)
 - **Customizable Quality** - Adjust bitrate, resolution, and frame rate settings
-- **Screen Recording** - Capture your device screen for later viewing (WIP)
-- **Screenshots** - Take instant screenshots of your device (WIP)
+- **Screen Recording** - Capture your device screen with automatic file transfer and format optimization
+- **Screenshots** - Take instant screenshots with automatic saving to local machine
 - **Real-time Logs** - Monitor ADB and scrcpy logs in real-time (WIP)
 - **Device Management** - View detailed device information and connection status
 - **Settings Management** - Configure ADB path, timeouts, and scrcpy options
@@ -45,6 +47,10 @@ Before using SideCast, ensure you have the following installed:
 - **Node.js** (v18 or higher)
 - **ADB** (Android Debug Bridge) - [Download here](https://developer.android.com/studio/command-line/adb)
 - **scrcpy** - [Download here](https://github.com/Genymobile/scrcpy)
+- **FFmpeg** (recommended for video compatibility) - [Download here](https://ffmpeg.org/download.html)
+  - macOS: `brew install ffmpeg`
+  - Windows: Download from website or `choco install ffmpeg`
+  - Linux: `sudo apt install ffmpeg` (Ubuntu/Debian) or `sudo yum install ffmpeg` (CentOS/RHEL)
 
 ### Android Device Setup
 
@@ -96,6 +102,51 @@ This will create distributable packages for your platform in the `dist` director
 1. **Connect via USB** first to establish initial connection
 2. **Enable Wi-Fi pairing** in the device settings
 3. **Use the Wi-Fi pairing dialog** to connect wirelessly
+
+### Screen Recording
+
+SideCast supports high-quality screen recording with automatic file management:
+
+#### Features
+
+- **High Quality**: Uses scrcpy for consistent quality with mirroring settings
+- **Configurable Settings**: Same bitrate, resolution, and FPS as mirroring
+- **Audio Support**: Optional audio recording with device audio
+- **Direct Save**: Files are saved directly to your computer (no device transfer needed)
+- **Format Optimization**: Automatic optimization for maximum compatibility
+
+#### Usage
+
+1. **Start Mirroring**: Begin screen mirroring for your device
+2. **Start Recording**: Click the red recording button (animated dot)
+3. **Stop Recording**: Click the button again to stop recording
+4. **File Location**: Recordings are saved to your configured directory
+
+#### Video Format
+
+- **Container**: MP4
+- **Video Codec**: H.264 (same as mirroring)
+- **Quality**: Configurable via mirroring settings
+- **Audio**: Optional AAC audio (if enabled)
+- **Compatibility**: Optimized for playback on most media players
+
+#### Troubleshooting
+
+- **Video Won't Play on macOS**:
+  - Install FFmpeg: `brew install ffmpeg` (macOS) or download from [ffmpeg.org](https://ffmpeg.org/download.html)
+  - Run `npm run check-ffmpeg` to verify installation
+  - Videos are automatically optimized for macOS compatibility when FFmpeg is available
+- **Empty Files**: Check device connection and scrcpy installation
+- **Recording Fails**: Ensure device is properly connected and scrcpy is installed
+- **Optimization Fails**: Check FFmpeg installation and try running the check script
+
+### Screenshots
+
+Take instant screenshots with automatic saving:
+
+1. **Start Mirroring**: Begin screen mirroring for your device
+2. **Take Screenshot**: Click the camera icon button
+3. **File Location**: Screenshots are automatically saved to your configured directory
 4. **Disconnect USB** once Wi-Fi connection is established
 
 ### Settings Configuration

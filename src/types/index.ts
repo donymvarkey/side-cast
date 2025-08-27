@@ -43,3 +43,10 @@ export interface Device {
   product: string;
   status: string;
 }
+
+export type LogMap = Record<string, string[]>;
+export interface MediaFilesType {
+  name: string;
+  path: string;
+  time: TimeRanges;
+}

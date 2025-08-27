@@ -16,5 +16,33 @@ declare global {
       ): Promise<AppSettings[K]>;
       getAll(): Promise<AppSettings>;
     };
+    logCatApi: {
+      startLogcat: (serial: string) => Promise<void>;
+      stopLogcat: (serial: string) => Promise<void>;
+      onLogcatData: (callback: (serial: string, line: string) => void) => void;
+      onLogcatEnd: (callback: (serial: string) => void) => void;
+    };
+    mirrorApi: {
+      onMirroringStopped: (callback: (serial: string) => void) => Promise<void>;
+    };
+    screenApi: {
+      startRecording: (serial: string) => Promise<{
+        success: boolean;
+        error?: string;
+        filename?: string;
+        message?: string;
+      }>;
+      stopRecording: (
+        serial: string
+      ) => Promise<{ success: boolean; error?: string }>;
+      takeScreenshot: (serial: string) => Promise<{
+        success: boolean;
+        error?: string;
+        filename?: string;
+        path?: string;
+      }>;
+      selectRecordingPath: () => Promise<string | null>;
+      selectScreenshotPath: () => Promise<string | null>;
+    };
   }
 }

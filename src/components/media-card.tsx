@@ -1,6 +1,11 @@
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Trash } from "lucide-react";
+import { Eye, Trash } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const MediaCard = ({
   name,
@@ -52,7 +57,7 @@ const MediaCard = ({
           {renderMediaPreview(type, path)}
 
           {/* Full-Space Hover Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[3px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[3px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-x-2">
             <Button
               onClick={(e) => {
                 e.stopPropagation();
@@ -63,6 +68,16 @@ const MediaCard = ({
             >
               <Trash className="w-5 h-5 text-white" />
             </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700 rounded-full p-3 transform hover:scale-110 transition-transform duration-200">
+                  <Eye />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Open in Finder</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </CardContent>
